@@ -1,0 +1,29 @@
+/* 
+    Document        : vouchsafe.css
+    Created on      : 28-Mar-2011, 4:27:04 PM
+    Modified on     : 01-Sep-2011, 2:03:00 PM
+    Engineered by   : Koneka Inc (http://www.koneka.com)
+    Author          : ShareThink Ltd.
+    Description:
+        Adding CSS for the VouchSafe button
+*/
+
+.vouchsafe-key{
+    display: inline-block;
+    width: 80px;
+}
+
+.vouchsafe-keys input
+{
+    width: 300px;
+}
+
+.vouchsafe-error{
+    display: inline-block;
+    width: 300px;
+}
+
+.vouchsafe-errors input
+{
+    width: 500px;
+}

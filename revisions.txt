@@ -1,0 +1,137 @@
+[version-454]
+function vouchsafe_wp_check_comment($comment_data)
+{
+    global $vouchsafe_opt;
+    global $vouchsafe_saved_error;
+
+    $challengeID = $_POST['hive-challenge-id'];
+    $response = $_POST['hive-challenge-response'];
+    $userIP = $_SERVER['REMOTE_ADDR'];
+
+    $vouchsafe_response = vouchsafe_check_answer($vouchsafe_opt['privkey'], $challengeID, $response, $userIP);
+    if ($vouchsafe_response->is_valid)
+        return $comment_data;
+    else
+    {
+        $vouchsafe_saved_error = $vouchsafe_response->error;
+        add_filter('pre_comment_approved', create_function('$a', 'return \'spam\';'));
+        return $comment_data;
+    }
+
+    return $comment_data;
+}
+
+- Report spam on every comments which failed
+
+-> Gets report that users still receive SPAM comments in the spam box
+------------------------------------------------------------------
+[version-620]
+function vouchsafe_wp_check_comment($comment_data)
+{
+    global $vouchsafe_opt;
+    global $vouchsafe_saved_error;
+
+    $challengeID = $_POST['vouchsafe-challenge-id'];
+    $response = $_POST['vouchsafe-challenge-response'];
+    $serverToken = isset($_POST["vouchsafe-server-token"])?$_POST["vouchsafe-server-token"]:null;
+	
+    $vouchsafe_response = vouchsafe_check_answer($vouchsafe_opt['privkey'], $challengeID, $response, $serverToken);
+    if ($vouchsafe_response->is_valid)
+        return $comment_data;
+    else
+    {
+        $vouchsafe_saved_error = $vouchsafe_response->error;
+        return $comment_data;
+    }
+
+    return $comment_data;
+}
+
+- Not get spam sending into spam box
+
+-> Gets report which spam gets into 
+------------------------------------------------------------------
+[version-671]
+function vouchsafe_wp_check_comment($comment_data)
+{
+    global $vouchsafe_opt;
+    global $vouchsafe_saved_error;
+
+    $challengeID = $_POST['vouchsafe-challenge-id'];
+    $response = $_POST['vouchsafe-challenge-response'];
+    $serverToken = isset($_POST["vouchsafe-server-token"])?$_POST["vouchsafe-server-token"]:null;
+	
+    $vouchsafe_response = vouchsafe_check_answer($vouchsafe_opt['privkey'], $challengeID, $response, $serverToken);
+    if ($vouchsafe_response->is_valid)
+        return $comment_data;
+    else
+    {
+        $vouchsafe_saved_error = $vouchsafe_response->error;
+	add_filter('pre_comment_approved', create_function('$a', 'return false;'));
+        return $comment_data;
+    }
+
+    return $comment_data;
+}
+
+- Discard the comment into the trash box instead of spam.
+
+-> The spam comments get deleted or go to the trash. However, moderator gets notification when a spam comment get posted when their setting is checked on "Notify me whenever anyone post a comment"
+------------------------------------------------------------------
+[version-680]
+function vouchsafe_wp_check_comment($comment_data)
+{
+    global $vouchsafe_opt;
+    global $vouchsafe_saved_error;
+    
+    $challengeID = $_POST['vouchsafe-challenge-id'];
+    $response = $_POST['vouchsafe-challenge-response'];
+    $serverToken = isset($_POST["vouchsafe-server-token"])?$_POST["vouchsafe-server-token"]:null;
+	
+    $vouchsafe_response = vouchsafe_check_answer($vouchsafe_opt['privkey'], $challengeID, $response, $serverToken);
+    if (!$vouchsafe_response->is_valid)
+    {
+        $vouchsafe_saved_error = $vouchsafe_response->error;
+        add_filter('pre_comment_approved', create_function('$a', 'return \'trash\';'));
+    }
+    return $comment_data;
+}
+
+-> The spam comments won't be notified to the moderator
+
+------------------------------------------------------------------
+[version-683]
+function vouchsafe_wp_check_comment($comment_data)
+{
+    global $vouchsafe_opt;
+    global $vouchsafe_saved_error;
+    
+    $challengeID = $_POST['vouchsafe-challenge-id'];
+    $response = $_POST['vouchsafe-challenge-response'];
+    $serverToken = isset($_POST["vouchsafe-server-token"])?$_POST["vouchsafe-server-token"]:null;
+	
+    $vouchsafe_response = vouchsafe_check_answer($vouchsafe_opt['privkey'], $challengeID, $response, $serverToken);
+    if (!$vouchsafe_response->is_valid)
+    {
+        $vouchsafe_saved_error = $vouchsafe_response->error;
+        if (isset($_POST['redirect_to'])){
+            wp_die($vouchsafe_opt['error_incorrect']);
+        }else{
+            add_filter('pre_comment_approved', create_function('$a', 'return \'spam\';'));
+        }
+    }
+
+    return $comment_data;
+}
+-> Prevent users get any notifications from invalid comments
+
+------------------------------------------------------------------
+[version-733]
+- Major changes in the plugin
+- Instead of using database to store the invalid comment* then delete the comment when the page gets redirected back to the original post of the comment, the plugin is now using SESSION to refill the comment form when an invalid comment is inserted. Original, Wordpress do not use Session for the regular pages, so it's best to use the database as a temporary storage space for the invalid comment. However, due to many spammers which spam the wp-comment-post.php page with unexpected methodologies. A session_start is inserted to initiate the session which allow use to use session for page when session_id is not detected. What happen after that is similar to the database approach.Please look at the plugin to see in detail.
+
+* invalid comment: is comment which is failed the validation of Vouchsafe
+
+------------------------------------------------------------------
+[version-754]
+- Allow users to use Vouchsafe plugin without public and private key set up
